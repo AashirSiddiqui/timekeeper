@@ -33,12 +33,25 @@ class dbAccesser():
         elif type(item) == Timer:
             self.cur.execute("INSERT INTO timer(totalTime, timeLeft, paused) values (?, ?, ?)", (util.timerTimeTupleToString(item.totalTime), util.timerTimeTupleToString(item.timeLeft), item.paused))
         self.con.commit()
+    
+    def removeItem(self, firstVal, type):
+        nameOfFirstVal = "timeElapsed"
+        if type == "alarm":
+            nameOfFirstVal = "timeTrigger"
+        elif type == "timer":
+            nameOfFirstVal = "timeLeft"
+            firstVal = "'" + firstVal + "'"
+        cmd = "DELETE FROM "+type+" WHERE "+nameOfFirstVal+" = "+str(firstVal)+";"
+        print(cmd)
+        self.cur.execute(cmd)
+        self.con.commit()
 
     def getTimekeeps(self):
         timekeeps = []
 
         for type in [("alarm", Alarm), ("stopwatch", Stopwatch), ("timer", Timer)]:
             self.cur.execute("SELECT * FROM "+type[0])
+            rowId = 0
             for i in self.cur:
                 if type[1] == Alarm:
                     timekeeps.append(type[1](
@@ -56,5 +69,7 @@ class dbAccesser():
                     timekeeps.append(type[1](
                         paused=i[1], timeElapsed=i[0]
                     ))
+                timekeeps[len(timekeeps) - 1].rowId = rowId
+                rowId += 1
         
         return timekeeps

@@ -1,4 +1,4 @@
-import tkinter, sv_ttk, math, util
+import tkinter, math, util
 from tkinter import ttk, font
 from util import Alarm, Stopwatch, Timer
 from database import dbAccesser
@@ -23,6 +23,14 @@ def whenCreateTimekeepDestroyed(createWin):
     updateBtnFrame()
     createWin.root.destroy()
 
+def deleteTimekeep(firstVal, type, _):
+    print(firstVal)
+    print(type)
+    type = type.lower()
+    access = dbAccesser()
+    access.removeItem(firstVal, type)
+    updateBtnFrame()
+
 def updateBtnFrame(loop = False):
     global btnFrame, timekeeps
 
@@ -41,12 +49,16 @@ def updateBtnFrame(loop = False):
         column = i - util.basefloor(i, base=3)
         buttons.append(0)
         if (type(thisTimekeep) == Alarm):
+            firstVal = thisTimekeep.timeTrigger
             buttons[i] = tkinter.Button(btnFrame, text=thisTimekeep.type+" "+util.formatClockTime(str(thisTimekeep.timeTrigger)), command=partial(openAlarmWindow,thisTimekeep))
         elif (type(thisTimekeep) == Timer):
+            firstVal = util.timerTimeTupleToString(thisTimekeep.timeLeft)
             buttons[i] = tkinter.Button(btnFrame, text=thisTimekeep.type+" "+util.formatTimerTimeTuple(thisTimekeep.totalTime, abbreviate=True), command=partial(openTimerWindow,thisTimekeep))
         else:
+            firstVal = thisTimekeep.timeElapsed
             buttons[i] = tkinter.Button(btnFrame, text=thisTimekeep.type, command=partial(openStopwatchWindow,thisTimekeep))
         buttons[i].grid(row = row, column = column, padx=(0, 10), pady=(0, 10))
+        buttons[i].bind("<Button-2>", partial(deleteTimekeep, firstVal, thisTimekeep.type))
     
     if loop:
         root.after(60000, updateBtnFrame)
